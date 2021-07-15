@@ -39,14 +39,20 @@ $ sudo systemctl restart systemd-timesyncd.service
 
 ### 3. HA Clusters 構成（２部構成） 
 今回は前者（Stacked etcd）の構成を取る
+![Stacked Etcd](../imgs/stackedetcd.png)
+![External Etcd](../imgs/extenaletcd.png)
 
-
-aaa
-      - `kubectl get nodes` → Ready になっていることを確認 
-      - エラーが発生したときは以下のコマンドで環境をチェック
+#### 1. Create LB
+#### 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
+#### 3. Install CNI : CNI のインストール 
+- `kubectl get nodes` → Ready になっていることを確認 
+- エラーが発生したときは以下のコマンドで環境をチェック
 <pre>
 # nc -v &lt;IP of LB&gt; 6443 
   Connection to &lt;IP of LB&gt; 6443 port [tcp/*] succeeded! → このメッセージが出力されると成功 
 # systemctl restart kubelet → 全ての Control-Plane 上で 
 # systemctl restart haproxy → haproxy をインストールしたマシン上で 
 </pre>
+#### 4. Create Another Control-Plane Nodes : その他の Control-Planes 
+#### 5. Create Worker Nodes : ワーカー ノード 
+
