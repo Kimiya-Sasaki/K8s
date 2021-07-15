@@ -6,13 +6,12 @@
 ```
 sudo passwd root
 ```
-  - HA Clusters の動きを検証したければ、最低でも下記の合計7台のマシンを用意する必要がある
-    - Load Balancer: 1台
-    - Control-Plane: 3台
-    - Woker Nodes: 3台
+  - HA Clusters の動きを厳密に検証したければ、最低でも下記の合計7台のマシンを用意する必要がある
+    - Load Balancer : 1台
+    - Control-Plane : 3台
+    - Woker Nodes   : 3台
   - CRI 準拠のコンテナ エンジンがインストールされている（Dockerなど） 
-    - [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/)
-    - 少し下にスクロールするとある
+    - [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/) - 少し下にスクロール
   - kubeadm, kubelet, kubectl がインストールされている 
     - [kubeadm のインストール](https://kubernetes.io/ja/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
   - swap が 以下の様に Swap が 0 になっていることを確認する
