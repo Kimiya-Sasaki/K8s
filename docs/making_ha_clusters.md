@@ -14,7 +14,7 @@ sudo passwd root
     - [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/) - 少し下にスクロール
   - kubeadm, kubelet, kubectl がインストールされている 
     - [kubeadm のインストール](https://kubernetes.io/ja/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
-  - swap が 以下の様に Swap が 0 になっていることを確認する
+  - swap を以下の様に 0 にする
 ```
 swapoff -a & free
 ```
@@ -36,7 +36,7 @@ systemctl restart systemd-timesyncd.service
     - kubelet は kubeadam を使うと Default で systemd になる 
     - Docker の Default は cgroupfs だが HA Cluster 構築のときに kubeadm でエラーになるので [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/) で systemd に変更している
 ### 2. HA Clusters 構成（２部構成） 
-今回は前者（stacked etcd）の構成を取る
+今回は前者（stacked etcd）の構成を取る。external etcd にする場合はさらに 3台のマシンが必要になる。
 
 <img src="../imgs/stackedetcd.png" width="649px">
 <img src="../imgs/extenaletcd.png" width="640px">
@@ -72,6 +72,11 @@ backend kubernetes-master-nodes
         server  <machine name> <IP of Master Node>:6443 check fall 3 rise 2
         server  <machine name> <IP of Master Node>:6443 check fall 3 rise 2
 ```
+リスタートする
+```
+systemctl daemon-reload
+systemctl restart haproxy
+```
 エラーが発生したとき以下のコマンドで調査 
 ```
 journalctl -u haproxy.service --since today --no-pager 
@@ -102,17 +107,12 @@ STATUS: Ready になっていることを確認
 NAME            STATUS   ROLES                  AGE   VERSION
 master01        Ready    control-plane,master   10h   v1.21.2
 </pre>
-- エラーが発生したときは以下のコマンドで環境をチェック
-```
-nc -v <IP of LB> 6443 
-```
 #### 4. Create Another Control-Plane Nodes : その他の Control-Planes
 - kubeadm init の出力でコピーした**上の** kubeadm join を該当するマシン上で実行する 
-- 事前に前提条件をすべて満たしておくこと（kubectl は使えない） 
+- 事前に前提条件をすべて満たしておくこと
 - Option に --control-plane --certificate-key が**ある**ことを確認 
-- コピーしたコマンドを Worker Node 上のマシンで動かす 
 <pre>
-kubeadm join …（以下省略）
+kubeadm join &lt;IP of LB&gt;:6443 --token XXXXXX --discovery-token-ca-cert-hash XXXXXX --control-plane --certificate-key XXXXXX
 </pre>
 - Control-Plane 上で join できたかを確認する
 ```
@@ -129,17 +129,14 @@ master03        Ready    control-plane,master   10h   v1.21.2
 - kubeadm init の出力でコピーした**下の** kubeadm join を該当するマシン上で実行する
 - 事前に前提条件をすべて満たしておくこと（kubectl は使えない）
 - Option に ---control-plane --certificate-key が**ない**ことを確認
+<pre>
+kubeadm join &lt;IP of LB&gt;:6443 --token XXXXX --discovery-token-ca-cert-hash XXXXXX
+</pre>
 #### その他
 - 動作確認 on Control-Plane
 ```
 kubectl get nodes      # STATUS: Ready 
 kubectl get pods –A    # STATUS: Running 
-```
-- 環境のリセット
-```
-rm -rf /etc/kubernetes/* 
-rm -rf /var/lib/etcd/* 
-kubeadm reset
 ```
 - 接続が上手くいかなかったとき
 
@@ -154,4 +151,10 @@ systemctl restart haproxy
 Control-Plane のマシン上で
 ```
 export KUBECONFIG=/etc/kubernetes/admin.conf
+```
+- 環境のリセット
+```
+rm -rf /etc/kubernetes/* 
+rm -rf /var/lib/etcd/* 
+kubeadm reset
 ```
