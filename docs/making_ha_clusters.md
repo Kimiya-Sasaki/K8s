@@ -89,26 +89,26 @@ systemctl restart haproxy → haproxy をインストールしたマシン上で
 - 事前に前提条件をすべて満たしておくこと（kubectl は使えない） 
 - Option に --control-plane --certificate-key があることを確認 
 - コピーしたコマンドを Worker Node 上のマシンで動かす 
-<pre>
-# kubeadm join …（以下省略）
-</pre>
+```
+kubeadm join …（以下省略）
+```
 - Control-Plane 上で join できたかを確認する → STATUS: Ready になっていることを確認
-<pre>
-# kubectl get nodes
-</pre>
+```
+kubectl get nodes
+```
 #### 5. Create Worker Nodes : ワーカー ノード 
 - kubeadm init の出力でコピーした下の kubeadm join を該当するマシン上で実行する
 - 事前に前提条件をすべて満たしておくこと（kubectl は使えない）
 - Option に ---control-plane --certificate-key がないことを確認
 #### その他
-- 動作確認（Control-Plane）
-<pre>
+- 動作確認 on Control-Plane
+```
 kubectl get nodes      # STATUS: Ready 
 kubectl get pods –A    # STATUS: Running 
-</pre>
+```
 - 環境のリセット
-<pre>
-# rm -rf /etc/kubernetes/* 
-# rm -rf /var/lib/etcd/* 
-# kubeadm reset
-</pre>
+```
+rm -rf /etc/kubernetes/* 
+rm -rf /var/lib/etcd/* 
+kubeadm reset
+```
