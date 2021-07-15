@@ -48,22 +48,30 @@ HAProxy のインストール
 # apt update 
 # apt install haproxy 
 </pre>
-以下の内容を追加する 
+以下のコマンドで動作チェック 
 <pre>
-# vi /etc/haproxy/haproxy.cfg 
-frontend kubernetes 
-        mode tcp 
-        option  tcplog 
-        bind <自分の IP Address>:6443 # IP は * でも良い Port 6443: apiserver のポート
-        default_backend kubernetes-master-nodes
-
-backend kubernetes-master-nodes 
-        mode tcp 
-        balance roundrobin 
-        server  master01 <IP of Master Node>:6443 check fall 3 rise 2 
-        server  master02 <IP of Master Node>:6443 check fall 3 rise 2 
+# nc -v <IP of LB> 6443 
+</pre>
+エラーが発生したとき以下のコマンドで調査 
+<pre>
+# journalctl -u haproxy.service --since today --no-pager 
 </pre>
 #### 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
+- `kubeadm init --config *.yaml` → この書式では HA Clusters 用の出力がなされないので以下の書式を使う
+<pre>
+# kubeadm init --control-plane-endpoint <IP of LB>:6443 --upload-certs
+</pre>
+- 2時間で証明書が無効になるので、そのときは以下のコマンドを使う
+<pre>
+# kubeadm init phase upload-certs --upload-certs 
+</pre>
+- 二通りの kubeadm join が出力されるのでコピーしておく 
+  - 上は Control-Plane (Master) を登録するときに使用 
+  - 下は Worker Node を登録するときに使用
+- KUBECONFIG 環境変数を設定 
+<pre>
+# export KUBECONFIG=/etc/kubernetes/admin.conf
+</pre>
 #### 3. Install CNI : CNI のインストール 
 - `kubectl get nodes` → Ready になっていることを確認 
 - エラーが発生したときは以下のコマンドで環境をチェック
@@ -73,6 +81,31 @@ backend kubernetes-master-nodes
 # systemctl restart kubelet → 全ての Control-Plane 上で 
 # systemctl restart haproxy → haproxy をインストールしたマシン上で 
 </pre>
-#### 4. Create Another Control-Plane Nodes : その他の Control-Planes 
+#### 4. Create Another Control-Plane Nodes : その他の Control-Planes
+- kubeadm init の出力でコピーした上の kubeadm join を該当するマシン上で実行する 
+- 事前に前提条件をすべて満たしておくこと（kubectl は使えない） 
+- Option に --control-plane --certificate-key があることを確認 
+- コピーしたコマンドを Worker Node 上のマシンで動かす 
+<pre>
+# kubeadm join …（以下省略）
+</pre>
+- Control-Plane 上で join できたかを確認する → STATUS: Ready になっていることを確認
+<pre>
+# kubectl get nodes
+</pre>
 #### 5. Create Worker Nodes : ワーカー ノード 
-
+- kubeadm init の出力でコピーした下の kubeadm join を該当するマシン上で実行する
+- 事前に前提条件をすべて満たしておくこと（kubectl は使えない）
+- Option に ---control-plane --certificate-key がないことを確認
+#### その他
+- 動作確認（Control-Plane）
+<pre>
+kubectl get nodes      # STATUS: Ready 
+kubectl get pods –A    # STATUS: Running 
+</pre>
+- 環境のリセット
+<pre>
+# rm -rf /etc/kubernetes/* 
+# rm -rf /var/lib/etcd/* 
+# kubeadm reset
+</pre>
