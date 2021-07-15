@@ -30,19 +30,39 @@ $ sudo systemctl restart systemd-timesyncd.service
   - 基本的に作業は全て root で行っている（一部 user とは作業が異なる）
     -  `$ sudo passwd root`
 
-### 2. High Availability/HA Clusters 環境の構築手順
+### 2. HA Clusters 構成（２部構成） 
+今回は前者（Stacked etcd）の構成を取る
+
+<img src="../imgs/stackedetcd.png" width="649px">
+<img src="../imgs/extenaletcd.png" width="640px">
+
+### 3. High Availability/HA Clusters 環境の構築手順
 1. Create LB : ロード バランサ 
 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
 3. Install CNI : CNI のインストール 
 4. Create Another Control-Plane Nodes : その他の Control-Planes 
 5. Create Worker Nodes : ワーカー ノード 
-
-### 3. HA Clusters 構成（２部構成） 
-今回は前者（Stacked etcd）の構成を取る
-![Stacked Etcd](../imgs/stackedetcd.png)
-![External Etcd](../imgs/extenaletcd.png)
-
 #### 1. Create LB
+HAProxy のインストール
+<pre>
+# apt update 
+# apt install haproxy 
+</pre>
+以下の内容を追加する 
+<pre>
+# vi /etc/haproxy/haproxy.cfg 
+frontend kubernetes 
+        mode tcp 
+        option  tcplog 
+        bind <自分の IP Address>:6443 # IP は * でも良い Port 6443: apiserver のポート
+        default_backend kubernetes-master-nodes
+
+backend kubernetes-master-nodes 
+        mode tcp 
+        balance roundrobin 
+        server  master01 <IP of Master Node>:6443 check fall 3 rise 2 
+        server  master02 <IP of Master Node>:6443 check fall 3 rise 2 
+</pre>
 #### 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
 #### 3. Install CNI : CNI のインストール 
 - `kubectl get nodes` → Ready になっていることを確認 
