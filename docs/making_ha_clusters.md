@@ -84,6 +84,27 @@ systemctl restart haproxy
 journalctl -u haproxy.service --since today --no-pager 
 ```
 #### 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
+- Raspberry PI で動かすときは下記の操作が必要
+```
+vi /boot/firmware/cmdline.txt
+```
+以下の内容を最後に付け加える。保存した後はリブート。
+```
+cgroup_memory=1 cgroup_enable=memory
+```
+- 以下のコマンドで cgroup の memory が 1 になっていることを確認
+<pre>
+cat /proc/cgroups
+
+#subsys_name    hierarchy       num_cgroups     enabled
+cpuset  9       10      1
+cpu     2       103     1
+cpuacct 2       103     1
+blkio   4       103     1
+memory  8       159     1  # ここを確認！
+devices 11      103     1
+<以下省略>
+</pre>
 - `kubeadm init --config *.yaml` → この書式では HA Clusters 用の出力がなされないので以下の書式を使う
 ```
 kubeadm init --control-plane-endpoint <IP of LB>:6443 --upload-certs
