@@ -93,7 +93,7 @@ kubeadm init phase upload-certs --upload-certs
 - 二通りの kubeadm join が出力されるのでコピーしておく 
   - 上は Control-Plane (Master) を登録するときに使用 
   - 下は Worker Node を登録するときに使用
-- KUBECONFIG 環境変数を設定 
+- KUBECONFIG 環境変数を設定する。因みにリモート アクセスする場合はこの環境構築は必要になるので ~/.bashrc に書き込んでおくと便利
 ```
 export KUBECONFIG=/etc/kubernetes/admin.conf
 ```
