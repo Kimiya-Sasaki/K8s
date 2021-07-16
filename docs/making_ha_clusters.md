@@ -12,6 +12,7 @@ sudo passwd root
     - Woker Nodes   : 3台
   - CRI 準拠のコンテナ エンジンがインストールされている（Dockerなど） 
     - [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/) - 少し下にスクロール
+    - Raspberry PI にインストールするときは、リポジトリの追加の場所で arch=amd64,arm64 とする（amd64は削除して良い）
   - kubeadm, kubelet, kubectl がインストールされている 
     - [kubeadm のインストール](https://kubernetes.io/ja/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
   - swap を以下の様に 0 にする
@@ -42,13 +43,14 @@ systemctl restart systemd-timesyncd.service
 <img src="../imgs/extenaletcd.png" width="640px">
 
 ### 3. High Availability/HA Clusters 環境の構築手順
-1. Create LB : ロード バランサ 
+1. Create LB : ロード バランサ → LB として稼働するマシンだけ
 2. Create Basic Control-Plane Node : 基本の Control-Plane (Master) 
 3. Install CNI : CNI のインストール 
 4. Create Another Control-Plane Nodes : その他の Control-Planes 
 5. Create Worker Nodes : ワーカー ノード 
 #### 1. Create LB
-HAProxy のインストール
+HAProxy のインストール : この作業は Load Balancer として稼働させるマシンだけに行う。
+また LB として稼働するマシンは、それ以外の作業は不必要。
 ```
 apt update 
 apt install haproxy 
