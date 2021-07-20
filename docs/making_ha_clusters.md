@@ -13,9 +13,37 @@ sudo passwd root
   - CRI 準拠のコンテナ エンジンがインストールされている（Dockerなど） 
     - [Docker のインストール](https://kubernetes.io/ja/docs/setup/production-environment/container-runtimes/) - 少し下にスクロール
     - Raspberry PI にインストールするときは、リポジトリの追加の場所で arch=amd64,arm64 とする（amd64は削除して良い）
-  - kubeadm, kubelet, kubectl がインストールされている 
-    - [kubeadm のインストール](https://kubernetes.io/ja/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
-  - swap を以下の様に 0 にする
+  - kubeadm, kubelet, kubectl がインストールされている
+
+iptables がブリッジを通過するトラフィックを処理できるようにする
+```
+cat <<EOF > /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+```
+iptables が nftables バックエンドを使用しないようにする
+```
+apt-get install -y iptables arptables ebtables
+
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+update-alternatives --set arptables /usr/sbin/arptables-legacy
+update-alternatives --set ebtables /usr/sbin/ebtables-legacy
+```
+kubeadm、kubelet、kubectl のインストール
+```
+apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+apt-get update
+apt-get install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
+```
+- swap を以下の様に 0 にする
 ```
 swapoff -a & free
 ```
