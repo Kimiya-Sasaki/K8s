@@ -1,5 +1,12 @@
 ## YAML の書き方
 ### 1. Pod マニフェスト
+- Pod とは
+  - K8s が管理する最小構成単位
+  - 1つ以上の Continer から構成
+  - Cluster IP が Pod 単位で払い出される
+  - Pod 内の Resources は同一の Node に Deploy される
+  - Pod を定義したマニフェストから生成される Pod は１つ
+
 - 必須フィールドは(*)で示す
 ```
 apiVersion: v1          # (*) 利用する Kubernetes API のバージョン
@@ -49,6 +56,11 @@ NAME              READY   STATUS    RESTARTS   AGE
 sample-pod        2/2     Running   0          32m
 </pre>
 ### 2. ReplicaSet のマニフェスト
+- ReplicaSet とは
+  - 同一仕様の Pod を複数生成・管理
+  - Pod 障害時指定した数になるよう自動回復
+  - Cluster 内で管理する Pod の追跡に Label を利用
+
 ```
 apiVersion: apps/v1
 kind: ReplicaSet          # ReplicaSet を定義
@@ -119,3 +131,43 @@ Node:         worker01/192.168.0.111
 </pre>
 Pod sample-rs-n9swz は woeker01 に配置されている。それぞれが満遍なく配置されている事が確認できる。
 ### 3. Deployment のマニフェスト
+- Deployment とは
+  - ReplicaSet を操作・管理する
+  - ReplicaSet の世代管理を可能にする
+    - リビジョンを使って Rollout が可能
+    - Deployment の編集によって ReplicaSet が更新される 
+
+```
+apiVersion: apps/v1
+kind: Deployment          # Deploymentに を指定
+metadata:
+  name: simple-ds         # kubectl get deploy で表示される NAME
+spec:                     # 以下は ReplicaSet リファレンスと同じ
+  replicas: 3
+  selector:
+    matchLabels:
+      app: simple 
+  template:
+    ...
+```
+- kubectl get deploy の実行結果
+```
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+simple-ds   3/3     3            3           3m49s
+```
+- Deploymenbt, ResultSet, Pods を一度に表示する
+```
+root@master01:/home/ubuntu/workspace# kubectl get deploy,rs,po
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/simple-ds   3/3     3            3           5m29s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/simple-ds-77fff76bdb   3         3         3       5m29s
+
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/simple-ds-77fff76bdb-7gfgw   2/2     Running   0          5m29s
+pod/simple-ds-77fff76bdb-dw257   2/2     Running   0          5m29s
+pod/simple-ds-77fff76bdb-ptj5m   2/2     Running   0          5m29s
+```
+- Deployment . ResultSet > Pod という抱合関係になる
+- 実運用で扱う構成単位
