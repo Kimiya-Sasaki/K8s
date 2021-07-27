@@ -1,6 +1,6 @@
 ## Node.js による Web Service を K8s 上に立てる
 ### 前提条件
-- Docker Hub に自分のアカウントが存在し使い方を知っている
+- Docker Hub に自分のアカウントが存在する
 - Docker Images を Deploy できる K8s の環境
 ### 1. Node.js と npm をインストール
 ```
