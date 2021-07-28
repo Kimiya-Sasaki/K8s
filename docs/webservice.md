@@ -2,6 +2,7 @@
 ### 前提条件
 - Docker Hub に自分のアカウントが存在する
 - Docker Images を Deploy できる K8s の環境が存在する
+- Express (Node.js) の概要が分かる（必須ではない）
 ### 1. Node.js と npm をインストール
 ```
 apt update
