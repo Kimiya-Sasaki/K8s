@@ -15,6 +15,8 @@ cd webservice
 ### 3. package.json の作成
 ```
 {
+  "private": true,
+  "repository": "",
   "name": "docker_web_app",
   "version": "1.0.0",
   "description": "Node.js on Docker",
@@ -72,8 +74,12 @@ docker build -t <your docker repos>:v1 .
 ### 8 動作確認
 - &lt;your docker repo&gt; は自分の環境に書き換えること
 ```
-docker push <your docker repo>:v1
+ docker run -p 80:8080 -d ninja12r/webservice:v2
+ curl http://localhost:80
 ```
+<pre>
+Hello World
+</pre>
 ### 9. Docker Hub にアップロード
 ```
 docker login
@@ -127,12 +133,17 @@ kubectl apply -f service.yaml
 ```
 ### 13. 動作確認
 ```
-kubectl get svc
+kubectl get svc,po
 ```
 <pre>
 NAME               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
 kubernetes         ClusterIP      10.96.0.1      &lt;none&gt;        443/TCP        6d
 web-app-service    LoadBalancer   10.103.7.173   &lt;pending&gt;     80:30968/TCP   143m
+
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/web-app-7fcff8564d-77zmz   1/1     Running   0          15h
+pod/web-app-7fcff8564d-95g9l   1/1     Running   0          15h
+pod/web-app-7fcff8564d-x2l9c   1/1     Running   0          15h
 </pre>
 CLUSTER-IP は自分の環境に読み替える
 ```
